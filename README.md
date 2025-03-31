@@ -8,7 +8,7 @@ Customer churn is a critical challenge for banks and financial institutions. Thi
 * Visualize key churn patterns using Power BI.  
 * Provide actionable insights to reduce churn and improve customer retention strategies.  
 
-## 🛠️ Tools & Technologies  
+## Tools & Technologies  
 - **SQL** – Data extraction, cleaning, and transformation  
 - **Power BI** – Data visualization and dashboard creation  
 
