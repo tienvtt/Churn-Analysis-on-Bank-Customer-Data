@@ -1,21 +1,34 @@
 create database bank_churn;
 use bank_churn;
+SET SQL_SAFE_UPDATES = 0;
+SET SQL_SAFE_UPDATES = 1;
 
 SELECT * FROM CUSTOMER;
 SELECT COUNT(*) FROM CUSTOMER;
--- EDA 
+
+-- Remove duplicate records
+DELETE FROM CUSTOMER
+WHERE CustomerId IN (
+    SELECT CustomerId
+    FROM (
+        SELECT CustomerId, ROW_NUMBER() OVER(PARTITION BY CustomerId ORDER BY CustomerId) AS rn
+        FROM CUSTOMER
+    ) t
+    WHERE rn > 1
+);
+
 
 -- 1. Customer Churn Overview
 -- What is the overall churn rate of the bank?
 SELECT 
     (SUM(Exited) / COUNT(*)) * 100 AS Churn_Rate 
-FROM bank_customers;
+FROM customer;
 
 -- How many customers have churned, and how many have stayed?
 SELECT 
     Exited AS Churn_Status,
     COUNT(*) AS Customer_Count
-FROM bank_customers
+FROM customers
 GROUP BY Exited;
 
 -- 2. Demographic Analysis of Churn
@@ -30,7 +43,7 @@ SELECT
     COUNT(*) AS Total_Customers,
     SUM(Exited) AS Churned_Customers,
     (SUM(Exited) * 100.0 / COUNT(*)) AS Churn_Rate
-FROM bank_customers
+FROM customer
 GROUP BY Age_Group
 ORDER BY Churn_Rate DESC;
 
@@ -40,7 +53,7 @@ SELECT
     COUNT(*) AS Total_Customers,
     SUM(Exited) AS Churned_Customers,
     (SUM(Exited) * 100.0 / COUNT(*)) AS Churn_Rate
-FROM bank_customers
+FROM customer
 GROUP BY Gender
 ORDER BY Churn_Rate DESC;
 
@@ -50,7 +63,7 @@ SELECT
     COUNT(*) AS Total_Customers,
     SUM(Exited) AS Churned_Customers,
     (SUM(Exited) * 100.0 / COUNT(*)) AS Churn_Rate
-FROM bank_customers
+FROM customer
 GROUP BY Geography
 ORDER BY Churn_Rate DESC;
 
@@ -87,15 +100,49 @@ FROM CUSTOMER
 GROUP BY NumOfProducts
 ORDER BY Churn_Rate DESC;
 
--- Does having a credit card affect churn?
--- ✅ Are inactive customers more likely to churn?
+SELECT NumOfProducts, Count(customerid) As Total_Churned_Customers
+FROM CUSTOMER
+WHERE Exited = 1
+Group by NumofProducts
+Order by Count(customerid) Desc;
+
+-- Are inactive customers more likely to churn?
+SELECT 
+    IsActiveMember,
+    COUNT(*) AS Total_Customers,
+    SUM(Exited) AS Churned_Customers,
+    (SUM(Exited) * 100.0 / COUNT(*)) AS Churn_Rate
+FROM CUSTOMER
+GROUP BY IsActiveMember;
 
 -- 4. Customer Tenure & Loyalty Analysis
 -- Do long-term customers (higher tenure) churn less compared to new customers?
--- At what tenure (years with the bank) do customers tend to churn the most?
+SELECT 
+    CASE 
+        WHEN Tenure > 5 THEN 'Long-Term Customers (Tenure > 5)' 
+        ELSE 'New Customers (Tenure ≤ 5)' 
+    END AS Customer_Tenure_Group,
+    COUNT(*) AS Total_Customers,
+    SUM(CASE WHEN Exited = 1 THEN 1 ELSE 0 END) AS Churned_Customers,
+    ROUND(100.0 * SUM(CASE WHEN Exited = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) AS Churn_Rate
+FROM CUSTOMER
+GROUP BY Customer_Tenure_Group;
+
 
 -- 5. Salary & Churn Correlation
 -- Does a higher estimated salary reduce the likelihood of churn?
+SELECT 
+    CASE 
+        WHEN EstimatedSalary < 50000 THEN 'Low Salary'
+        WHEN EstimatedSalary BETWEEN 50000 AND 100000 THEN 'Medium Salary'
+        ELSE 'High Salary'
+    END AS Salary_Category,
+    COUNT(*) AS Total_Customers,
+    SUM(Exited) AS Churned_Customers,
+    (SUM(Exited) * 100.0 / COUNT(*)) AS Churn_Rate
+FROM CUSTOMER
+GROUP BY Salary_Category
+ORDER BY Churn_Rate DESC;
 
 -- What is the average salary of churned vs. non-churned customers?
 SELECT 
