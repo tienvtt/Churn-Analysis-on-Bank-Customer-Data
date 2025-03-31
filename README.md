@@ -9,7 +9,7 @@ Customer churn is a critical challenge for banks and financial institutions. Thi
 * Provide actionable insights to reduce churn and improve customer retention strategies.  
 
 ## Tools & Technologies  
-- **SQL** – Data extraction, cleaning, and transformation  
+- **SQL** – Data extraction, cleaning
 - **Power BI** – Data visualization and dashboard creation  
 
 ## Dataset  
